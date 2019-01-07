@@ -1,0 +1,85 @@
+\documentclass[11pt]{article}
+
+\usepackage{fullpage}
+
+\begin{document}
+
+\title{ARM11 - Assembler and Emulator Report}
+\author{Fengzheng Shi, Jiayang Cao, Jinli Yao and Robert Tan}
+
+\maketitle
+
+\section{Introduction}
+In this project, we implemented an ARM emulator, an ARM assembler, and wrote an ARM assembly program to flash an LED on a Raspberry Pi. In short, we completed all the tasks in time and, after doing this project, achieved a better understanding of the ARM architecture and C language. In the following sections, we will discuss our implementation of the emulator and assembler, the problems we encountered, and how we overcame those problems. We will also discuss strengths and weaknesses of our teamwork at the end of the report.
+
+\section{Team Work}
+
+\subsection{Work Division}
+When working on the project, we split our work into three parts: the emulator, the assembler and the ARM assembly program that flashes an LED, according to the specification. Robert was in charge of writing the emulator section. He built up the overall structure and Jiayang helped by coding various functions to fill in the structure and defining masks. In the meantime, Fengzheng was in charge of part 2, and has begun work on the symbol table of assembler, with Jiayang implementing the tokenizer and Jinli coding the instruction assembler. Finally, Jiayang was responsible for flashing the LED on the Raspberry Pi using our assembler once it was complete. 
+
+\subsection{Evaluation on Group Working}
+The teamwork was effective most of the time. Robert is one of the most skillful programmers on the team, so it was a wise decision to put him in charge of the emulator. He was able to understand the specification and clearly explain the confusing parts to the rest of the team. This put our team on track towards a good start. Similarly, Fengzheng cooperated well with Robert to reach consensus on the part of the code that the assembler and emulator were going share and part 2 was quickly on its way to completion. Robert and Fengzheng's suitable choice of the division of workload to other teammates improved the overall efficiency of our working progress.\newline
+
+\noindent
+However, there was something we could have done to further improve our collaboration. Because Robert did not assign any tasks before he finished constructing the structure, Jiayang was waiting and could not start her work. We think writing down the overall design or structure before actually starting to build it is essential for later tasks as the others can start coding earlier and we can save valuable time. Another thing worth mentioning is that we do not use GIT very appropriately since it is our first time to use this for group project. When Fengzheng and Jinli were working on the assembler part on separate computers in the same time, if one modified the code, he/ she would push the git of the new version but the other person just copied and pasted from GITLAB the new implementation. We realized that we can use git-merge or divide the code into separate files, which would be more efficient for our team work.
+
+
+\section{Implementation of the Emulator}
+
+\subsection{Design Structure}
+One of the first tasks in implementing the emulator was to design a structure for the emulator file. This was overlooked at first, and we begun coding without any defined constants or C structures. Soon, Robert realized this caused many problems as constants needed constant copying and reuse, so he saved a copy of the emulator and begun restructuring the project. This was done by first defining constants and structures in the header. The emulator header defines several C structs, including a 'State' struct, which stores an array of the registers and an array of the memory, a 'DecodedInstruction' struct, which contains variables that define the behavior of every instruction, and a 'Pipeline' struct, which handles the flow of the program, telling the program when to terminate. The main function first initializes the state of the ARM machine when it first turns on, then it reads the binary file containing instructions and stores it in its memory. Once initialization is complete, the pipeline execution begins, where each command is fetched, decoded, and executed in a similar fashion to an ARM machine. This process is distributed over many different functions each with its own specific usage.
+
+\subsection{Reusability of Code}
+As the assembler and the emulator were written in parallel by different people, the reusability of code from the emulator is limited. However, with the emulator completed first, we will focus as a group to complete the assembler. During this process, we may choose to reuse many constant definitions in the emulator header. Once both the emulator and assembler is complete, our group will restructure the project and extract any common code into a separate header file.
+
+\section{Implementation of Assembler}
+\subsection{Design Structure}
+Our assembler reads the input source file to get a string of overall contents and then translates each line of the source file into binary, line by line. The assembler contains two symbol tables. One, named "label$\_$address", is for label and label's address and the other one, named "ins$\_$table", is for mnemonic and the function which implements the corresponding instruction. Also, our assembler has 6 positions to store memories. The assembler uses a Tokenizer to break the file into an array of strings in each line and when going through each line, the assembler will check whether it is an instruction line, for example, "mov r1, r2", or a label line, for example, "loop:". If the line is a label line and the label has not been added to "label$\_$address", the new label will be added to the table. If the line is an instruction line, the assembler will search the instruction by using "ins$\_$table" to get the corresponding function, applying the function to get the result binary and then printing this binary to the output binary file. \newline
+\noindent
+\subsection{Difficulty and Challenge}
+During our implementation of the assembler we have faced two challenges: counting the offset between the current address and the label in branch instructions and storing large numbers in "ldr" to print at the end of the binary file. we tried our best to overcome them and we will discuss them in more detail in the following separate sections.
+\subsubsection{Counting the Offset}
+As for branch instruction, the assembler needs to calculate the offset between the current address and the label. To handle this problem, Fengzheng decided to add another one argument "int no$\_$line" for each function for instructions. This variable is the current pipeline. In main function in assemble.c, the "int cur$\_$line" increases by one every time when the line is the instruction line and the assembler passes "cur$\_$line" to each functions for instructions as the "no$\_$line". Additionally, our assembler stores the position of the label when the label appears for the first time. The assembler only loops through the overall commends once. Every time, when there is a label, it will check whether the label has been added to the symbol table or not. With the "cur$\_$line" and the position where the label first appears, the assembler is able to calculate the offset.
+
+\subsubsection{Storing Memory}
+One specific problem for ldr instruction is to handle big numbers. For example, ldr r1, =0x20200000, which needs to print the big number at the end of the file and calculate the offset between the current line and the big number. Fengzheng and Jinli tried to add another array of int to each function for instructions so that the big number could be stored in it and they decided to do a loop through the int array after doing loop through the lines. However, the number always failed to be stored, which is due to our limit understanding of pointer and address. Finally, Fengzheng decided to use 6 global int variables, called from "Memory$\_$0" to "Memory$\_$5", initialized them all to be 0 and then used them to store memory. After doing loop through the lines of the file, the assembler will check whether there is any value storing in our memory. If it is, the assembler will print the number in order to the binary file.
+
+\subsection{Future Improvement}
+One thing worth mentioning is that our assembler can only store 6 big numbers. It is better to use a global array of int to store memories. Another point is that as for the functions for instructions, some of them share the same syntax, we can have some helper functions to deal with the same part in the instructions. Also, we can add some assert statement to check the input of some functions.
+
+\section{Group Reflection}
+In the previous four weeks, we worked on a good pace. Robert finished implementing the emulator with the help of Jiayang, Fengzheng completed the implementation of assembler with the cooperation of Jinli and Jiayang wrote the last gpio part. We have a good relation with each other. Our productivity was boosted by the even distribution of workload and members' willingness to work even dinner time. All of us are willing to share our ideas or knowledge among each other. When one of us met any problem, he / she would tell us and we tried to help him / her. This helps us to boost our completion even further and better.\newline
+
+\noindent
+However, We still have loads of flaws to improve as a group of people who totally new to deal with such a cooperated coding project. First of all, efficient communication with each other is a top priority to improve. Misunderstanding to the concept is a usual thing to happen during our work time. When we discovered that and tried to make it clear, it seems always be hard. Secondly, git commit is easily to be too simple or too detailed. This is unlikely to be handle in short time. It is an ability about conclusion. But we tried our best to do this. Plus, we followed our mentor's suggestion to create branches for each person but we made many troubles due to our limited knowledge about git. Thirdly, It seems to work on each single file by each single person will be reasonable and efficient. When we tried to work on the same file. For instance, as for Assembling part, we all wrote on Assembler.c. It is hard to update each others progress and it required member stay physically together to work, which is very dumb. Also, it reflects the division of work is not so clear.
+
+\section{Individual Reflections}
+\subsection{Fengzheng Shi}
+I think the most challenge part for this project is that all of our members have very little understanding on architecture and assembly language since all of us are JMC students. It is really hard to start the project at the beginning but all of us tried our best to overcome the problem and process to do this project. For me, I watched some tutorials about assembly language online. Our group working pace and working atmosphere is good. As the leader in this group, I separated the work to each member. Everyone finished their part on time as I supposed. \newline
+
+\noindent
+I cooperated with Jinli to do the assembler part. At the beginning, we had many differences in understanding the specification but we tried to explain clearly our own idea to each other and convince each other. Personally, this is really a good experience because it is my first time to work in a group for a computing project and I realized I still have many limitations in both teamwork and programing, including C and git. Also, I need to improve my coding comment to make my teammates easier to understand my code to save time and improve our working efficiency.
+
+\subsection{Jiayang Cao}
+I think I am a good team player. I successfully completed my assignment and was always open to suggestion. I have been consistent throughout the progress and helped my teammates along the way. For example, after I wrote the assembly code for the third part, the file given by our assembler didn’t make the light flash. While the binary file given by an assembler I downloaded on the Internet did do the correct job. I did not just leave the problem to Fengzheng who is in charged of writing the assembler. I helped her to debug using the extended emulator I wrote and found the mistakes she made when dealing with loops. For future group projects, I would continue to deliver consistent skills and commitment. I would also improve on my comments so that it makes it easier for people I am working use can understand what I am trying to implement and there would be no need for me to spend a lot of time explaining. 
+
+
+\subsection{Jinli Yao}
+Mainly, I cooperated with Fengzheng for assembler part. It is such a excellent and enjoyable experience which worked with her and our teammates and also I learned a lot from them during this process. And it got me very interested, because it is the first time to have a group coding. \newline 
+
+\noindent
+However, when we discovered some differences in understanding  of concepts, I cannot explain well in words. Efficient communication is the most important part to me to improve. Furthermore, it also showed the weakness of computing architecture, such a coding helps us understand the course as well.
+\newline 
+
+\noindent
+Also, I need to improve my coding tidiness and git commit style. It is bad when group members spend a long time to understand your code. Consistency of coding style is imperative in such a large project.
+
+\subsection{Robert Tan}
+
+My role in the group throughout our assignment was to spearhead the development of the emulator and assist Jiayang in combining the assembler and the Raspberry Pi in making a GPIO pin flash. In developing the emulator, I felt that time management was one of my strengths as I completed the emulator (passing all the test cases) significantly before the deadline and had plenty of time to re-factor my code into more organized and readable formats. However, one thing I could've improved when implementing the emulator was to draft a set of specifications and code structures before beginning the project. Although I still completed the emulator ahead of schedule, my first naive implementation was completely devoid of structure and led to such a difficult time navigating the code that I had to redesign and re-implement the entire project. Since all our coursework relies on a predefined and comprehensive specification sheet, I feel like developing a similar set of specifications for every function would alleviate a lot of the problems that occur during our implementations and save time for not needing to re-factor the code.
+
+\noindent
+\newline
+In general, I felt that the work was distributed between group members in an efficient way. By assigning one person for every separate programming task, we reduce the need for others to understand each others' code. When one group member reaches an impasse, others can then assist them in debugging when need be. As such, I would like to maintain this way of dividing work when working with others in the future.
+
+\end{document}

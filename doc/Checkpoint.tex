@@ -1,0 +1,35 @@
+\documentclass[11pt]{article}
+
+\usepackage{fullpage}
+
+\begin{document}
+
+\title{Checkpoint Summary}
+\author{Fengzheng Shi, Jiayang Cao, Jinli Yao and Robert Tan}
+
+\maketitle
+
+\section{Team Work}
+
+\subsection{Work Division}
+Generally, we split our work into three parts: emulator, assembler and the ARM assembly program that flashes an LED, according to the specification. Robert was in charge of writing the emulator section. He built up the overall structure and Jiayang helped by coding various functions to fill in the structure and defining masks. We have already completed this part. In the meantime, Fengzheng was in charge of part 2, and has begun to work on the symbol table of assembler, with Jiayang implementing the tokenizer and Jinli coding the instruction assembler comprising. We are currently debugging the assembler. Additionally, Jiayang is responsible for writing the checkpoint summary and completing part 3 later. 
+
+\subsection{Evaluation on Group Working}
+The teamwork was satisfying most of the time. Robert is one of the most skillful programmers on the team and it was a wise decision to put him in charge of the emulator. He was able to understand the specification and clearly explain the confusing part to the rest of the team. This set our team to a good start. Similarly, Fengzheng set the part 2 on a good track and she cooperated well with Robert to reach consensus on the part of the code that the assembler and emulator were going share. Robert and Fengzheng's suitable choice of the division of workload to other teammates improved the overall efficiency of our working progress.\newline
+
+\noindent
+However, there was something we could have done to further improve our collaboration. Because Robert did not assign any task before he finished constructing the structure, Jiayang was waiting and could not start her work. We think writing down the overall design or structure before actually starting to build it is essential for later tasks as the others can start coding earlier and we can save valuable time. Another thing worth mentioning is that we do not use GIT very appropriately since it is our first time to use this for group project. When Fengzheng and Jinli were working on the assembler part on separate computers in the same time, if one modified the code, he/ she would push the git of the new version but the other person just copied and pasted from GITLAB the new implementation. We realize that we can use git-merge or divide the code into separate file, which is more efficient for our team work.
+
+
+\section{Implementation of Emulator}
+
+\subsection{Design Structure}
+One of the first tasks in implementing the emulator was to design a structure for the emulator file. This was overlooked at first, and we begun coding without any defined constants or C structures. Soon, Robert realized this caused many problems as constants needed constant copying and reuse, so he saved a copy of the emulator and begun restructuring the project. This was done by first defining constants and structures in the header. The emulator header defines several C structs, including a 'State' struct, which stores an array of the registers and an array of the memory, a 'DecodedInstruction' struct, which contains variables that define the behavior of every instruction, and a 'Pipeline' struct, which handles the flow of the program, telling the program when to terminate. The main function first initializes the state of the ARM machine when it first turns on, then it reads the binary file containing instructions and stores it in its memory. Once initialization is complete, the pipeline execution begins, where each command is fetched, decoded, and executed in a similar fashion to an ARM machine. This process is distributed over many different functions each with its own specific usage.
+
+\subsection{Reusability of Code}
+As the assembler and the emulator were written in parallel by different people, the reusability of code from the emulator is limited. However, with the emulator completed first, we will focus as a group to complete the assembler. During this process, we may choose to reuse many constant definitions in the emulator header. Once both the emulator and assembler is complete, our group will restructure the project and extract any common code into a separate header file.
+
+\section{Possible Future Difficulties}
+We intend to build a smart mirror for the extension and we find the architecture part might be challenging to some degree as all the group members are JMC students and we do not have strong background in this domain. To achieve our goals, we are planning on self-studying the slides of the relevant computing Architecture courses and researching on the Internet to gain sufficient knowledge. Additionally, throughout working on the emulator and assembler, we have found collaboration between group members fairly challenging as each of our tasks depend on each other. For example, if we divide coding responsibilities amongst ourselves, we must each understand not only our own task, but also the code that this task depends upon. When putting everything together, this can also cause bugs that otherwise wouldn't arise if one person had written the whole thing. We aim to overcome this difficulty by always working together in the same environment and communicate any issues or circumstances clearly to the entire group.
+
+\end{document}
